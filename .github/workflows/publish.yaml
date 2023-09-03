@@ -1,0 +1,19 @@
+---
+"on":
+  schedule:
+    - cron: '0 */6 * * *'
+  push:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate file
+        run: |
+          go install github.com/ScriptTiger/Hosts-BL@latest
+          curl -qsLO "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
+          hosts-bl -i hosts -o steven-black-unified -f unbound
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
