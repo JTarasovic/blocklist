@@ -2,7 +2,6 @@
 "on":
   schedule:
     - cron: '0 */6 * * *'
-  push:
 
 jobs:
   publish:
