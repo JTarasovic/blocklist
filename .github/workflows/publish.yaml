@@ -2,7 +2,12 @@
 "on":
   schedule:
     - cron: '0 */6 * * *'
+  push:
+    branches:
+      - master
 
+env:
+  OUT_FILE: steven-black-unified-unbound
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -24,9 +29,11 @@ jobs:
           curl -qsLO \
             "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
           /home/runner/go/bin/Hosts-BL \
+            -f unbound \
             -i hosts \
-            -o steven-black-unified-unbound \
-            -f unbound
+            -o - \
+          | grep -v 'klclick.\?\.com' >> ${{ env.OUT_FILE }}
+
           rm -f hosts
 
       - name: Commit & Push changes
