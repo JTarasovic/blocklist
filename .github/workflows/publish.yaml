@@ -4,7 +4,7 @@
     - cron: '0 */6 * * *'
   push:
     branches:
-      - master
+      - main
 
 env:
   OUT_FILE: steven-black-unified-unbound
