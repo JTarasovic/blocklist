@@ -32,7 +32,7 @@ jobs:
             -f unbound \
             -i hosts \
             -o - \
-          | grep -v 'klclick.\?\.com' >> ${{ env.OUT_FILE }}
+          | grep -v 'klclick.\?\.com' > ${{ env.OUT_FILE }}
 
           rm -f hosts
 
