@@ -24,8 +24,9 @@ jobs:
           check-latest: true
 
       - name: Generate file
+        shell: bash
         run: |
-          go install github.com/ScriptTiger/Hosts-BL@latest
+          go install github.com/ScriptTiger/Hosts-BL@13APR2023
           curl -qsLO \
             "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
           /home/runner/go/bin/Hosts-BL \
