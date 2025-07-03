@@ -5,9 +5,12 @@
   push:
     branches:
       - main
+  pull_request:
 
-env:
-  OUT_FILE: steven-black-unified-unbound
+defaults:
+  run:
+    shell: bash
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -18,27 +21,55 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-go@v5
-        with:
-          go-version: stable
-          check-latest: true
 
-      - name: Generate file
-        shell: bash
+      - name: Setup env
         run: |
-          go install github.com/ScriptTiger/Hosts-BL@13APR2023
-          curl -qsLO \
-            "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
-          /home/runner/go/bin/Hosts-BL \
-            -f unbound \
-            -i hosts \
-            -o - \
-          | grep -v 'klclick.\?\.com' \
-          | grep -v 'wl.spotify.com' > ${{ env.OUT_FILE }}
+          {
+            echo "upstream-hosts=${{ runner.temp }}/upstream-hosts";
+            echo "processed-hosts=${{ runner.temp }}/processed-hosts";
+            echo "final-hosts=steven-black-unified-unbound";
+          } >> "$GITHUB_ENV"
 
-          rm -f hosts
+      - name: Install Hosts-BL
+        uses: jaxxstorm/action-install-gh-release@v2.1.0
+        with:
+          repo: ScriptTiger/Hosts-BL
+          tag: 13APR2023
+          cache: enable
+          chmod: 0755
+
+      - name: Download upstream hosts
+        run: |
+          curl -qsLo ${{ env.upstream-hosts }} \
+            "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
+
+      - name: Convert to unbound format
+        run: |
+          hosts-bl \
+            -f unbound \
+            -i ${{ env.upstream-hosts }} \
+            -o ${{ env.processed-hosts }}
+
+      - name: Remove allowlisted entries
+        run: |
+          grep \
+            --invert-match \
+            --file=allowlist \
+            ${{ env.processed-hosts }} > ${{ env.final-hosts }}
+
+      - name: Create job summary
+        run: |
+          # exit early if no diff
+          git diff --quiet --exit-code ${{ env.final-hosts }} && exit 0
+          {
+            echo "# ${{ env.final-hosts }} Diff";
+            echo $'```';
+            git diff ${{ env.final-hosts }};
+            echo $'```';
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit & Push changes
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions-js/push@v1.5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
