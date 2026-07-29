@@ -70,6 +70,6 @@ jobs:
 
       - name: Commit & Push changes
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions-js/push@v1.5
+        uses: actions-js/push@v1.6
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
